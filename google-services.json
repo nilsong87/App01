@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "203579329153",
+    "project_id": "musiconnect-app-75144",
+    "storage_bucket": "musiconnect-app-75144.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:203579329153:android:b2e9afc2656373ea3c9b80",
+        "android_client_info": {
+          "package_name": "com.anonymous.MusiConnect"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBtwW5uwQSkj6UeS7LKetVFgasd-s5Pcjs"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

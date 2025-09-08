@@ -4,7 +4,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:provider/provider.dart';
 import 'package:musiconnect/providers/user_profile_provider.dart';
 import 'package:musiconnect/models/group.dart';
-import 'package:musiconnect/screens/group_detail_screen.dart'; // Import the new screen
+// Import the new screen
+import 'package:musiconnect/routes.dart'; // Import AppRoutes
 
 class TrupeScreen extends StatefulWidget {
   const TrupeScreen({super.key});
@@ -139,10 +140,9 @@ class TrupeScreenState extends State<TrupeScreen> {
                     margin: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     child: InkWell(
                       onTap: () {
-                        Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (ctx) => GroupDetailScreen(group: group),
-                          ),
+                        Navigator.of(context).pushNamed(
+                          AppRoutes.groupDetail,
+                          arguments: group,
                         );
                       },
                       child: Padding(

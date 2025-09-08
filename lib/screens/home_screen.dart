@@ -5,7 +5,7 @@ import 'package:musiconnect/providers/user_profile_provider.dart';
 import 'package:musiconnect/providers/post_provider.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
-import 'package:musiconnect/screens/comments_screen.dart';
+import 'package:musiconnect/routes.dart'; // Import AppRoutes
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -301,10 +301,9 @@ class HomeScreenState extends State<HomeScreen> {
                           ),
                           TextButton.icon(
                             onPressed: () {
-                              Navigator.of(context).push(
-                                MaterialPageRoute(
-                                  builder: (context) => CommentsScreen(postId: post.id),
-                                ),
+                              Navigator.of(context).pushNamed(
+                                AppRoutes.comments,
+                                arguments: post.id,
                               );
                             },
                             icon: const Icon(Icons.comment_outlined),

@@ -8,7 +8,13 @@ class UserProfileProvider with ChangeNotifier {
 
   UserProfile? get userProfile => _userProfile;
 
+  bool _isLoading = false;
+
+  bool get isLoading => _isLoading;
+
   Future<void> fetchUserProfile(String uid) async {
+    _isLoading = true;
+    notifyListeners(); // Notify listeners that loading has started
     try {
       DocumentSnapshot doc = await FirebaseFirestore.instance
           .collection('users')
@@ -16,10 +22,12 @@ class UserProfileProvider with ChangeNotifier {
           .get();
       if (doc.exists) {
         _userProfile = UserProfile.fromFirestore(doc);
-        notifyListeners();
       }
     } catch (e) {
       debugPrint('Error fetching user profile: $e');
+    } finally {
+      _isLoading = false;
+      notifyListeners(); // Notify listeners that loading has finished
     }
   }
 

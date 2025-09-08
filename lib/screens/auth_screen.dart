@@ -54,6 +54,7 @@ class _AuthScreenState extends State<AuthScreen> {
             username: _usernameController.text.trim(),
             userType: _userType!,
           );
+          if (!mounted) return;
           await Provider.of<UserProfileProvider>(context, listen: false)
               .createUserProfile(newUser);
         }

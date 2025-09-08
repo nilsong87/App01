@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:musiconnect/screens/home_screen.dart';
-import 'package:musiconnect/screens/vagas_screen.dart';
-import 'package:musiconnect/screens/trupe_screen.dart';
-import 'package:musiconnect/screens/artista_screen.dart';
+import 'package:musiconnect/routes.dart';
+import 'package:musiconnect/main_screen.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:musiconnect/screens/auth_screen.dart';
@@ -10,7 +8,13 @@ import 'package:provider/provider.dart'; // Import provider
 import 'package:musiconnect/providers/user_profile_provider.dart'; // Import UserProfileProvider
 import 'package:musiconnect/providers/post_provider.dart'; // Import PostProvider
 import 'package:musiconnect/providers/vaga_provider.dart'; // Import VagaProvider
-import 'package:musiconnect/screens/users_list_screen.dart'; // Import UsersListScreen
+// Import UsersListScreen
+import 'package:musiconnect/screens/comments_screen.dart'; // Import CommentsScreen
+import 'package:musiconnect/screens/group_detail_screen.dart'; // Import GroupDetailScreen
+import 'package:musiconnect/models/group.dart'; // Import Group model
+import 'package:musiconnect/utils/app_colors.dart'; // Import custom app colors
+import 'package:musiconnect/l10n/app_localizations.dart'; // Import generated localizations
+import 'package:flutter_localizations/flutter_localizations.dart'; // Import flutter_localizations
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -27,42 +31,9 @@ void main() async {
   );
 }
 
-// Define the custom color palette
-Map<int, Color> getMaterialColor(int hexColor) {
-  return {
-    50: Color(hexColor).withAlpha((255 * 0.1).round()),
-    100: Color(hexColor).withAlpha((255 * 0.2).round()),
-    200: Color(hexColor).withAlpha((255 * 0.3).round()),
-    300: Color(hexColor).withAlpha((255 * 0.4).round()),
-    400: Color(hexColor).withAlpha((255 * 0.5).round()),
-    500: Color(hexColor).withAlpha((255 * 0.6).round()),
-    600: Color(hexColor).withAlpha((255 * 0.7).round()),
-    700: Color(hexColor).withAlpha((255 * 0.8).round()),
-    800: Color(hexColor).withAlpha((255 * 0.9).round()),
-    900: Color(hexColor).withAlpha((255 * 1.0).round()),
-  };
-}
 
-final MaterialColor primaryColor = MaterialColor(
-  0xFF72577C,
-  getMaterialColor(0xFF72577C),
-);
-final MaterialColor accentColor = MaterialColor(
-  0xFF562155,
-  getMaterialColor(0xFF562155),
-);
-final MaterialColor lightBlue = MaterialColor(
-  0xFFC5F7F0,
-  getMaterialColor(0xFFC5F7F0),
-);
-final MaterialColor mediumBlue = MaterialColor(
-  0xFFA9C2C9,
-  getMaterialColor(0xFFA9C2C9),
-);
-final MaterialColor grayPurple = MaterialColor(
-  0xFF8E8CA3,
-  getMaterialColor(0xFF8E8CA3),
-);
+
+
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
@@ -70,9 +41,19 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'MusiConnect',
+      title: AppLocalizations.of(context)!.appTitle, // Use localized title
+      localizationsDelegates: [
+        AppLocalizations.delegate,
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
+      supportedLocales: const [
+        Locale('en', ''), // English
+        Locale('pt', ''), // Portuguese
+        // Add other supported locales here
+      ],
       theme: ThemeData(
-        primarySwatch: primaryColor,
         colorScheme: ColorScheme.light(
           primary: primaryColor,
           secondary: accentColor,
@@ -96,7 +77,6 @@ class MyApp extends StatelessWidget {
         useMaterial3: true,
       ),
       darkTheme: ThemeData(
-        primarySwatch: primaryColor,
         colorScheme: ColorScheme.dark(
           primary: primaryColor,
           secondary: accentColor,
@@ -117,9 +97,29 @@ class MyApp extends StatelessWidget {
           unselectedItemColor: lightBlue,
           backgroundColor: primaryColor,
         ),
-        useMaterial3: true,
+        useMaterial3: true
       ),
       themeMode: ThemeMode.system, // Follows system theme
+      routes: {
+        AppRoutes.auth: (context) => const AuthScreen(),
+        AppRoutes.main: (context) => const MainScreen(),
+        AppRoutes.comments: (context) {
+          final postId = ModalRoute.of(context)?.settings.arguments as String?;
+          if (postId == null) {
+            // Handle error or navigate to a default screen if postId is null
+            return const Text('Error: Post ID not found'); // Or a more user-friendly error screen
+          }
+          return CommentsScreen(postId: postId);
+        },
+        AppRoutes.groupDetail: (context) {
+          final group = ModalRoute.of(context)?.settings.arguments as Group?;
+          if (group == null) {
+            // Handle error or navigate to a default screen if group is null
+            return const Text('Error: Group not found'); // Or a more user-friendly error screen
+          }
+          return GroupDetailScreen(group: group);
+        },
+      },
       home: StreamBuilder(
         stream: FirebaseAuth.instance.authStateChanges(),
         builder: (ctx, userSnapshot) {
@@ -132,55 +132,27 @@ class MyApp extends StatelessWidget {
               context,
               listen: false,
             ).fetchUserProfile(userSnapshot.data!.uid);
-            return const MainScreen();
+            // Navigate after the current frame is built
+            Future.microtask(() {
+              if (!context.mounted) return; // Add this line
+              Navigator.of(context).pushReplacementNamed(AppRoutes.main);
+            });
+            return const SizedBox.shrink(); // Return an empty widget while navigating
           }
-          return const AuthScreen();
+          if (userSnapshot.hasError) {
+            return Center(
+              child: Text('An error occurred: ${userSnapshot.error}'),
+            );
+          }
+          Future.microtask(() {
+            if (!context.mounted) return; // Add this line
+            Navigator.of(context).pushReplacementNamed(AppRoutes.auth);
+          });
+          return const SizedBox.shrink(); // Return an empty widget while navigating
         },
       ),
     );
   }
 }
 
-class MainScreen extends StatefulWidget {
-  const MainScreen({super.key});
 
-  @override
-  State<MainScreen> createState() => _MainScreenState();
-}
-
-class _MainScreenState extends State<MainScreen> {
-  int _selectedIndex = 0;
-
-  static final List<Widget> _widgetOptions = <Widget>[
-    HomeScreen(),
-    VagasScreen(),
-    TrupeScreen(),
-    ArtistaScreen(),
-    UsersListScreen(), // New Chat tab
-  ];
-
-  void _onItemTapped(int index) {
-    setState(() {
-      _selectedIndex = index;
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('MusiConnect')),
-      body: _widgetOptions.elementAt(_selectedIndex),
-      bottomNavigationBar: BottomNavigationBar(
-        items: const <BottomNavigationBarItem>[
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Início'),
-          BottomNavigationBarItem(icon: Icon(Icons.work), label: 'Vagas'),
-          BottomNavigationBarItem(icon: Icon(Icons.group), label: 'Trupe'),
-          BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Artista'),
-          BottomNavigationBarItem(icon: Icon(Icons.chat), label: 'Chat'),
-        ],
-        currentIndex: _selectedIndex,
-        onTap: _onItemTapped,
-      ),
-    );
-  }
-}

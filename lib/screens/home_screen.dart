@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:provider/provider.dart';
-import 'package:musiconnect/providers/user_profile_provider.dart';
 import 'package:musiconnect/providers/post_provider.dart';
-import 'package:image_picker/image_picker.dart';
-import 'dart:io';
-import 'package:musiconnect/routes.dart'; // Import AppRoutes
+import 'package:musiconnect/routes.dart';
+import 'package:musiconnect/widgets/video_player_widget.dart';
+import 'package:musiconnect/widgets/audio_player_widget.dart';
+import 'package:intl/intl.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -15,92 +15,52 @@ class HomeScreen extends StatefulWidget {
 }
 
 class HomeScreenState extends State<HomeScreen> {
-  final _postController = TextEditingController();
   final _auth = FirebaseAuth.instance;
-  XFile? _selectedMedia;
-  String? _selectedMediaType;
-  bool _isUploading = false;
+  late ScrollController _scrollController;
 
   @override
   void initState() {
     super.initState();
-    Provider.of<PostProvider>(context, listen: false).fetchPosts();
+    _fetchInitialPosts();
+    _scrollController = ScrollController();
+    _scrollController.addListener(_scrollListener);
   }
 
-  Future<void> _pickMedia(ImageSource source, {bool isVideo = false, bool isAudio = false}) async {
-    final picker = ImagePicker();
-    XFile? pickedFile;
-
-    if (isVideo) {
-      pickedFile = await picker.pickVideo(source: source);
-    } else if (isAudio) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Seleção de áudio não implementada ainda.')),
-      );
-      return;
-    } else {
-      pickedFile = await picker.pickImage(source: source);
-    }
-
-    setState(() {
-      _selectedMedia = pickedFile;
-      if (pickedFile != null) {
-        if (isVideo) {
-          _selectedMediaType = 'video';
-        } else if (isAudio) {
-          _selectedMediaType = 'audio';
-        } else {
-          _selectedMediaType = 'image';
-        }
-      } else {
-        _selectedMediaType = null;
-      }
-    });
-  }
-
-  void _createPost() async {
-    final user = _auth.currentUser;
-    final userProfileProvider = Provider.of<UserProfileProvider>(context, listen: false);
-    final postProvider = Provider.of<PostProvider>(context, listen: false);
-
-    final userProfile = userProfileProvider.userProfile;
-
-    if (user == null ||
-        userProfile == null ||
-        (_postController.text.trim().isEmpty && _selectedMedia == null)) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Por favor, escreva algo ou selecione uma mídia.')),
-      );
-      return;
-    }
-
-    setState(() {
-      _isUploading = true;
-    });
-
+  Future<void> _fetchInitialPosts() async {
     try {
-      await postProvider.createPost(
-        currentUserProfile: userProfile,
-        content: _postController.text.trim().isEmpty ? null : _postController.text.trim(),
-        mediaFile: _selectedMedia,
-        mediaType: _selectedMediaType,
-      );
-
-      _postController.clear();
-      setState(() {
-        _selectedMedia = null;
-        _selectedMediaType = null;
-        _isUploading = false;
+      WidgetsBinding.instance.addPostFrameCallback((_) async {
+        if (mounted) {
+          await Provider.of<PostProvider>(context, listen: false).fetchPosts();
+        }
       });
-      await postProvider.fetchPosts();
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Erro ao criar post: $e')),
+        SnackBar(content: Text('Erro ao carregar posts iniciais: ${e.toString()}')),
       );
-      setState(() {
-        _isUploading = false;
-      });
+    }
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  void _scrollListener() async {
+    if (_scrollController.position.pixels ==
+        _scrollController.position.maxScrollExtent) {
+      final postProvider = Provider.of<PostProvider>(context, listen: false);
+      if (postProvider.hasMorePosts && !postProvider.isLoadingPosts) {
+        try {
+          await postProvider.fetchPosts();
+        } catch (e) {
+          if (!mounted) return;
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Erro ao carregar mais posts: ${e.toString()}')),
+          );
+        }
+      }
     }
   }
 
@@ -111,76 +71,14 @@ class HomeScreenState extends State<HomeScreen> {
 
     return Column(
       children: [
-        Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Column(
-            children: [
-              Row(
-                children: [
-                  Expanded(
-                    child: TextField(
-                      controller: _postController,
-                      decoration: const InputDecoration(
-                        hintText: 'O que você está pensando?',
-                        border: OutlineInputBorder(),
-                      ),
-                      maxLines: 3,
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  _isUploading
-                      ? const CircularProgressIndicator()
-                      : ElevatedButton(
-                          onPressed: _createPost,
-                          child: const Text('Postar'),
-                        ),
-                ],
-              ),
-              if (_selectedMedia != null)
-                Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 8.0),
-                  child: _selectedMediaType == 'video'
-                      ? const Text('Vídeo selecionado (player em breve)')
-                      : Image.file(
-                          File(_selectedMedia!.path),
-                          height: 150,
-                          fit: BoxFit.cover,
-                        ),
-                ),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
-                children: [
-                  TextButton.icon(
-                    onPressed: () => _pickMedia(ImageSource.gallery),
-                    icon: const Icon(Icons.image),
-                    label: const Text('Imagem'),
-                  ),
-                  TextButton.icon(
-                    onPressed: () => _pickMedia(ImageSource.camera),
-                    icon: const Icon(Icons.camera_alt),
-                    label: const Text('Câmera'),
-                  ),
-                  TextButton.icon(
-                    onPressed: () => _pickMedia(ImageSource.gallery, isVideo: true),
-                    icon: const Icon(Icons.video_library),
-                    label: const Text('Vídeo'),
-                  ),
-                  TextButton.icon(
-                    onPressed: () => _pickMedia(ImageSource.gallery, isAudio: true),
-                    icon: const Icon(Icons.audiotrack),
-                    label: const Text('Música'),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
+        // Stories and LIVES sections can be kept here or moved to a different screen
+        // For now, we will keep them to not break the UI completely
         const Divider(),
         SizedBox(
           height: 120,
           child: ListView.builder(
             scrollDirection: Axis.horizontal,
-            itemCount: 5,
+            itemCount: 5, // Placeholder
             itemBuilder: (ctx, index) {
               return Container(
                 width: 80,
@@ -225,94 +123,110 @@ class HomeScreenState extends State<HomeScreen> {
         const Divider(),
         Expanded(
           child: ListView.builder(
-            itemCount: postProvider.posts.length,
+            controller: _scrollController,
+            itemCount: postProvider.posts.length +
+                (postProvider.isLoadingPosts && postProvider.hasMorePosts ? 1 : 0),
             itemBuilder: (ctx, index) {
+              if (index == postProvider.posts.length) {
+                return const Padding(
+                  padding: EdgeInsets.all(8.0),
+                  child: Center(child: CircularProgressIndicator()),
+                );
+              }
               final post = postProvider.posts[index];
-              final bool isLiked = currentUser != null && post.likes.contains(currentUser.uid);
+              final bool isLiked =
+                  currentUser != null && post.likes.contains(currentUser.uid);
 
               return Card(
-                margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                child: Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          CircleAvatar(
-                            radius: 20,
-                            backgroundImage: post.userProfileImageUrl != null && post.userProfileImageUrl!.isNotEmpty
-                                ? NetworkImage(post.userProfileImageUrl!)
-                                : null,
-                            child: post.userProfileImageUrl == null || post.userProfileImageUrl!.isEmpty
-                                ? const Icon(Icons.person, size: 20, color: Colors.white)
-                                : null,
-                          ),
-                          const SizedBox(width: 8),
-                          Text(
-                            post.username,
-                            style: const TextStyle(fontWeight: FontWeight.bold),
-                          ),
-                          const Spacer(),
-                          if (currentUser != null && post.userId == currentUser.uid)
-                            IconButton(
+                elevation: 4.0,
+                margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.0)),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    ListTile(
+                      leading: CircleAvatar(
+                        backgroundImage: post.userProfileImageUrl != null &&
+                                post.userProfileImageUrl!.isNotEmpty
+                            ? NetworkImage(post.userProfileImageUrl!)
+                            : null,
+                        child: post.userProfileImageUrl == null ||
+                                post.userProfileImageUrl!.isEmpty
+                            ? const Icon(Icons.person)
+                            : null,
+                      ),
+                      title: Text(post.username, style: const TextStyle(fontWeight: FontWeight.bold)),
+                      subtitle: Text(DateFormat.yMMMd().add_jm().format(post.timestamp.toDate())),
+                      trailing: (currentUser != null && post.userId == currentUser.uid)
+                          ? IconButton(
                               icon: const Icon(Icons.delete),
                               onPressed: () => postProvider.deletePost(post.id),
-                            ),
-                        ],
+                            )
+                          : null,
+                    ),
+                    if (post.content != null && post.content!.isNotEmpty)
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                        child: Text(post.content!),
                       ),
-                      const SizedBox(height: 8),
-                      if (post.content != null && post.content!.isNotEmpty)
-                        Text(post.content!),
-                      if (post.mediaUrl != null && post.mediaUrl!.isNotEmpty)
-                        Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 8.0),
-                          child: post.mediaType == 'video'
-                              ? const Text('Vídeo (player em breve)')
-                              : post.mediaType == 'audio'
-                                  ? const Text('Áudio (player em breve)')
-                                  : Image.network(
-                                      post.mediaUrl!,
-                                      height: 200,
-                                      width: double.infinity,
-                                      fit: BoxFit.cover,
-                                    ),
+                    if (post.mediaUrl != null && post.mediaUrl!.isNotEmpty)
+                      Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 8.0),
+                        child: post.mediaType == 'video'
+                            ? VideoPlayerWidget(videoUrl: post.mediaUrl!)
+                            : post.mediaType == 'audio'
+                                ? AudioPlayerWidget(audioUrl: post.mediaUrl!)
+                                : Image.network(
+                                    post.mediaUrl!,
+                                    height: 250,
+                                    width: double.infinity,
+                                    fit: BoxFit.cover,
+                                    loadingBuilder: (BuildContext context, Widget child, ImageChunkEvent? loadingProgress) {
+                                      if (loadingProgress == null) return child;
+                                      return Center(
+                                        child: CircularProgressIndicator(
+                                          value: loadingProgress.expectedTotalBytes != null
+                                              ? loadingProgress.cumulativeBytesLoaded / loadingProgress.expectedTotalBytes!
+                                              : null,
+                                        ),
+                                      );
+                                    },
+                                    errorBuilder: (context, error, stackTrace) {
+                                      return const Center(child: Icon(Icons.error));
+                                    },
+                                  ),
+                      ),
+                    const Divider(height: 1),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceAround,
+                      children: [
+                        TextButton.icon(
+                          onPressed: () {
+                            if (currentUser != null) {
+                              postProvider.likePost(post.id, currentUser.uid);
+                            }
+                          },
+                          icon: Icon(
+                            isLiked ? Icons.thumb_up : Icons.thumb_up_alt_outlined,
+                            color: isLiked
+                                ? Theme.of(context).colorScheme.primary
+                                : Colors.grey,
+                          ),
+                          label: Text('Like (${post.likes.length})'),
                         ),
-                      const SizedBox(height: 4),
-                      Text(
-                        post.timestamp.toDate().toString(),
-                        style: const TextStyle(color: Colors.grey, fontSize: 12),
-                      ),
-                      const Divider(),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceAround,
-                        children: [
-                          TextButton.icon(
-                            onPressed: () {
-                              if (currentUser != null) {
-                                postProvider.likePost(post.id, currentUser.uid);
-                              }
-                            },
-                            icon: Icon(
-                              isLiked ? Icons.thumb_up : Icons.thumb_up_alt_outlined,
-                              color: isLiked ? Theme.of(context).colorScheme.primary : Colors.grey,
-                            ),
-                            label: Text('Like (${post.likes.length})'),
-                          ),
-                          TextButton.icon(
-                            onPressed: () {
-                              Navigator.of(context).pushNamed(
-                                AppRoutes.comments,
-                                arguments: post.id,
-                              );
-                            },
-                            icon: const Icon(Icons.comment_outlined),
-                            label: const Text('Comment'),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
+                        TextButton.icon(
+                          onPressed: () {
+                            Navigator.of(context).pushNamed(
+                              AppRoutes.comments,
+                              arguments: post.id,
+                            );
+                          },
+                          icon: const Icon(Icons.comment_outlined),
+                          label: const Text('Comment'),
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
               );
             },

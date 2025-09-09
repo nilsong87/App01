@@ -10,8 +10,14 @@ class PostProvider with ChangeNotifier {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final FirebaseStorage _storage = FirebaseStorage.instance;
 
-  List<Post> _posts = [];
+  final List<Post> _posts = [];
   List<Post> get posts => _posts;
+
+  DocumentSnapshot? _lastDocument;
+  bool _hasMorePosts = true;
+  bool get hasMorePosts => _hasMorePosts;
+  bool _isLoadingPosts = false;
+  bool get isLoadingPosts => _isLoadingPosts;
 
   Future<void> createPost({
     required UserProfile currentUserProfile,
@@ -33,7 +39,7 @@ class PostProvider with ChangeNotifier {
         mediaUrl = await snapshot.ref.getDownloadURL();
       } catch (e) {
         debugPrint('Error uploading media: $e');
-        return;
+        throw Exception('Failed to upload media: $e'); // Throw exception
       }
     }
 
@@ -50,25 +56,58 @@ class PostProvider with ChangeNotifier {
 
     try {
       await _firestore.collection('posts').doc(newPost.id).set(newPost.toFirestore());
-      _posts.insert(0, newPost);
-      notifyListeners();
+      // When a new post is created, we should reset the pagination
+      // and fetch posts again to ensure the new post appears at the top.
+      resetPosts();
+      await fetchPosts();
       debugPrint('Post created successfully!');
     } catch (e) {
       debugPrint('Error creating post: $e');
+      throw Exception('Failed to create post: $e'); // Throw exception
     }
   }
 
-  Future<void> fetchPosts() async {
+  Future<void> fetchPosts({int limit = 10}) async {
+    if (!_hasMorePosts || _isLoadingPosts) {
+      return;
+    }
+
+    _isLoadingPosts = true;
+    notifyListeners();
+
     try {
-      QuerySnapshot snapshot = await _firestore
+      Query query = _firestore
           .collection('posts')
           .orderBy('timestamp', descending: true)
-          .get();
-      _posts = snapshot.docs.map((doc) => Post.fromFirestore(doc)).toList();
-      notifyListeners();
+          .limit(limit);
+
+      if (_lastDocument != null) {
+        query = query.startAfterDocument(_lastDocument!);
+      }
+
+      QuerySnapshot snapshot = await query.get();
+
+      if (snapshot.docs.isEmpty) {
+        _hasMorePosts = false;
+      } else {
+        _lastDocument = snapshot.docs.last;
+        _posts.addAll(snapshot.docs.map((doc) => Post.fromFirestore(doc)).toList());
+        _hasMorePosts = snapshot.docs.length == limit;
+      }
     } catch (e) {
       debugPrint('Error fetching posts: $e');
+      throw Exception('Failed to fetch posts: $e'); // Throw exception
+    } finally {
+      _isLoadingPosts = false;
+      notifyListeners();
     }
+  }
+
+  void resetPosts() {
+    _posts.clear();
+    _lastDocument = null;
+    _hasMorePosts = true;
+    notifyListeners();
   }
 
   Future<void> likePost(String postId, String userId) async {
@@ -85,6 +124,7 @@ class PostProvider with ChangeNotifier {
 
       await postRef.update({'likes': likes});
 
+      // Update the specific post in the local list without refetching all posts
       final postIndex = _posts.indexWhere((post) => post.id == postId);
       if (postIndex != -1) {
         _posts[postIndex] = Post.fromFirestore(await postRef.get());
@@ -92,6 +132,7 @@ class PostProvider with ChangeNotifier {
       }
     } catch (e) {
       debugPrint('Error liking post: $e');
+      throw Exception('Failed to like post: $e'); // Throw exception
     }
   }
 
@@ -109,6 +150,7 @@ class PostProvider with ChangeNotifier {
       });
     } catch (e) {
       debugPrint('Error adding comment: $e');
+      throw Exception('Failed to add comment: $e'); // Throw exception
     }
   }
 
@@ -127,6 +169,7 @@ class PostProvider with ChangeNotifier {
       notifyListeners();
     } catch (e) {
       debugPrint('Error deleting post: $e');
+      throw Exception('Failed to delete post: $e'); // Throw exception
     }
   }
 }

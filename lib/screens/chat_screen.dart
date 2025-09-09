@@ -60,22 +60,22 @@ class ChatScreenState extends State<ChatScreen> {
         await showDialog(
           context: context,
           builder: (ctx) => AlertDialog(
-            title: const Text('Limpar Conversa'),
+            title: const Text('Clear Chat'), // Placeholder for localization
             content: const Text(
-              'Tem certeza de que deseja limpar todas as mensagens desta conversa?',
+              'Are you sure you want to clear all messages in this conversation?', // Placeholder for localization
             ),
             actions: [
               TextButton(
                 onPressed: () {
                   Navigator.of(ctx).pop(false);
                 },
-                child: const Text('Cancelar'),
+                child: const Text('Cancel'), // Placeholder for localization
               ),
               ElevatedButton(
                 onPressed: () {
                   Navigator.of(ctx).pop(true);
                 },
-                child: const Text('Limpar'),
+                child: const Text('Clear'), // Placeholder for localization
               ),
             ],
           ),
@@ -99,12 +99,12 @@ class ChatScreenState extends State<ChatScreen> {
         if (!mounted) return;
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text('Conversa limpa com sucesso!')));
+        ).showSnackBar(const SnackBar(content: Text('Chat cleared successfully!'))); // Placeholder for localization
       } catch (e) {
         if (!mounted) return;
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text('Erro ao limpar conversa: $e')));
+        ).showSnackBar(SnackBar(content: Text('Error clearing chat: $e'))); // Placeholder for localization
       }
     }
   }
@@ -120,7 +120,7 @@ class ChatScreenState extends State<ChatScreen> {
           IconButton(
             icon: const Icon(Icons.clear_all),
             onPressed: _clearChat,
-            tooltip: 'Limpar Conversa',
+            tooltip: 'Clear Chat', // Placeholder for localization
           ),
         ],
       ),
@@ -136,10 +136,10 @@ class ChatScreenState extends State<ChatScreen> {
                   .snapshots(),
               builder: (ctx, chatSnapshot) {
                 if (chatSnapshot.connectionState == ConnectionState.waiting) {
-                  return Center(child: CircularProgressIndicator());
+                  return const Center(child: CircularProgressIndicator());
                 }
                 if (!chatSnapshot.hasData || chatSnapshot.data!.docs.isEmpty) {
-                  return Center(child: Text('Nenhuma mensagem ainda.'));
+                  return const Center(child: Text('No messages yet.')); // Placeholder for localization
                 }
 
                 final messages = chatSnapshot.data!.docs;
@@ -159,17 +159,31 @@ class ChatScreenState extends State<ChatScreen> {
                         color: isMe
                             ? Theme.of(context).colorScheme.primary
                             : Colors.grey[300],
-                        margin: EdgeInsets.symmetric(
+                        margin: const EdgeInsets.symmetric(
                           vertical: 4,
                           horizontal: 8,
                         ),
                         child: Padding(
                           padding: const EdgeInsets.all(8.0),
-                          child: Text(
-                            message.content,
-                            style: TextStyle(
-                              color: isMe ? Colors.white : Colors.black,
-                            ),
+                          child: Column( // Changed to Column to add timestamp
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                message.content,
+                                style: TextStyle(
+                                  color: isMe ? Colors.white : Colors.black,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                // Placeholder for timestamp display
+                                message.timestamp.toDate().toString(),
+                                style: TextStyle(
+                                  color: isMe ? Colors.white70 : Colors.black54,
+                                  fontSize: 10,
+                                ),
+                              ),
+                            ],
                           ),
                         ),
                       ),
@@ -187,13 +201,15 @@ class ChatScreenState extends State<ChatScreen> {
                   child: TextField(
                     controller: _messageController,
                     decoration: InputDecoration(
-                      hintText: 'Enviar mensagem...',
-                      border: OutlineInputBorder(),
+                      hintText: 'Send message...', // Placeholder for localization
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(25.0), // Added border radius
+                      ),
                     ),
                   ),
                 ),
-                SizedBox(width: 8),
-                IconButton(icon: Icon(Icons.send), onPressed: _sendMessage),
+                const SizedBox(width: 8),
+                IconButton(icon: const Icon(Icons.send), onPressed: _sendMessage),
               ],
             ),
           ),

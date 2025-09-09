@@ -32,39 +32,65 @@ class TrupeScreenState extends State<TrupeScreen> {
         _groupNameController.text.trim().isEmpty ||
         _groupDescriptionController.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Por favor, preencha o nome e a descrição do grupo.'),
+        const SnackBar(
+          content: Text('Please fill in the group name and description.'), // Placeholder for localization
         ),
       );
       return;
     }
 
-    await _firestore.collection('groups').add({
-      'name': _groupNameController.text.trim(),
-      'description': _groupDescriptionController.text.trim(),
-      'adminId': user.uid,
-      'members': [user.uid], // Current user is the first member
-      'createdAt': Timestamp.now(),
-    });
+    try {
+      await _firestore.collection('groups').add({
+        'name': _groupNameController.text.trim(),
+        'description': _groupDescriptionController.text.trim(),
+        'adminId': user.uid,
+        'members': [user.uid], // Current user is the first member
+        'createdAt': Timestamp.now(),
+      });
 
-    _groupNameController.clear();
-    _groupDescriptionController.clear();
+      _groupNameController.clear();
+      _groupDescriptionController.clear();
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Group created successfully!')), // Placeholder for localization
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error creating group: $e')), // Placeholder for localization
+      );
+    }
   }
 
   void _joinLeaveGroup(Group group) async {
     final user = _auth.currentUser;
     if (user == null) return;
 
-    if (group.members.contains(user.uid)) {
-      // Leave group
-      await _firestore.collection('groups').doc(group.id).update({
-        'members': FieldValue.arrayRemove([user.uid]),
-      });
-    } else {
-      // Join group
-      await _firestore.collection('groups').doc(group.id).update({
-        'members': FieldValue.arrayUnion([user.uid]),
-      });
+    try {
+      if (group.members.contains(user.uid)) {
+        // Leave group
+        await _firestore.collection('groups').doc(group.id).update({
+          'members': FieldValue.arrayRemove([user.uid]),
+        });
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Left group successfully!')), // Placeholder for localization
+        );
+      } else {
+        // Join group
+        await _firestore.collection('groups').doc(group.id).update({
+          'members': FieldValue.arrayUnion([user.uid]),
+        });
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Joined group successfully!')), // Placeholder for localization
+        );
+      }
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error joining/leaving group: $e')), // Placeholder for localization
+      );
     }
   }
 
@@ -82,31 +108,35 @@ class TrupeScreenState extends State<TrupeScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    'Criar Novo Grupo',
+                  const Text(
+                    'Create New Group', // Placeholder for localization
                     style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                   ),
-                  SizedBox(height: 12),
+                  const SizedBox(height: 12),
                   TextField(
                     controller: _groupNameController,
                     decoration: InputDecoration(
-                      labelText: 'Nome do Grupo',
-                      border: OutlineInputBorder(),
+                      labelText: 'Group Name', // Placeholder for localization
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10.0), // Added border radius
+                      ),
                     ),
                   ),
-                  SizedBox(height: 12),
+                  const SizedBox(height: 12),
                   TextField(
                     controller: _groupDescriptionController,
                     decoration: InputDecoration(
-                      labelText: 'Descrição do Grupo',
-                      border: OutlineInputBorder(),
+                      labelText: 'Group Description', // Placeholder for localization
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10.0), // Added border radius
+                      ),
                     ),
                     maxLines: 3,
                   ),
-                  SizedBox(height: 12),
+                  const SizedBox(height: 12),
                   ElevatedButton(
                     onPressed: _createGroup,
-                    child: Text('Criar Grupo'),
+                    child: const Text('Create Group'), // Placeholder for localization
                   ),
                 ],
               ),
@@ -121,10 +151,10 @@ class TrupeScreenState extends State<TrupeScreen> {
                 .snapshots(),
             builder: (ctx, groupSnapshot) {
               if (groupSnapshot.connectionState == ConnectionState.waiting) {
-                return Center(child: CircularProgressIndicator());
+                return const Center(child: CircularProgressIndicator());
               }
               if (!groupSnapshot.hasData || groupSnapshot.data!.docs.isEmpty) {
-                return Center(child: Text('Nenhum grupo encontrado.'));
+                return const Center(child: Text('No groups found.')); // Placeholder for localization
               }
 
               final groups = groupSnapshot.data!.docs;
@@ -137,7 +167,7 @@ class TrupeScreenState extends State<TrupeScreen> {
                       user != null && group.members.contains(user.uid);
 
                   return Card(
-                    margin: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     child: InkWell(
                       onTap: () {
                         Navigator.of(context).pushNamed(
@@ -152,20 +182,20 @@ class TrupeScreenState extends State<TrupeScreen> {
                           children: [
                             Text(
                               group.name,
-                              style: TextStyle(
+                              style: const TextStyle(
                                 fontWeight: FontWeight.bold,
                                 fontSize: 16,
                               ),
                             ),
-                            SizedBox(height: 4),
+                            const SizedBox(height: 4),
                             Text(group.description),
-                            SizedBox(height: 4),
-                            Text('Membros: ${group.members.length}'),
-                            SizedBox(height: 8),
+                            const SizedBox(height: 4),
+                            Text('Members: ${group.members.length}'), // Placeholder for localization
+                            const SizedBox(height: 8),
                             ElevatedButton(
                               onPressed: () => _joinLeaveGroup(group),
                               child: Text(
-                                isMember ? 'Sair do Grupo' : 'Entrar no Grupo',
+                                isMember ? 'Leave Group' : 'Join Group', // Placeholder for localization
                               ),
                             ),
                           ],

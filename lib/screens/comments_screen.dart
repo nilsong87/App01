@@ -24,7 +24,7 @@ class CommentsScreenState extends State<CommentsScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Comments'),
+        title: const Text('Comments'), // Placeholder for localization
       ),
       body: Column(
         children: [
@@ -41,7 +41,7 @@ class CommentsScreenState extends State<CommentsScreen> {
                   return const Center(child: CircularProgressIndicator());
                 }
                 if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-                  return const Center(child: Text('No comments yet.'));
+                  return const Center(child: Text('No comments yet.')); // Placeholder for localization
                 }
 
                 final comments = snapshot.data!.docs;
@@ -51,8 +51,18 @@ class CommentsScreenState extends State<CommentsScreen> {
                   itemBuilder: (context, index) {
                     final comment = comments[index];
                     return ListTile(
-                      title: Text(comment['username'] ?? ''),
-                      subtitle: Text(comment['comment'] ?? ''),
+                      title: Text(comment['username'] ?? 'Anonymous'), // Placeholder for localization
+                      subtitle: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(comment['comment'] ?? ''),
+                          const SizedBox(height: 4),
+                          Text(
+                            (comment['timestamp'] as Timestamp).toDate().toString(),
+                            style: const TextStyle(color: Colors.grey, fontSize: 10),
+                          ),
+                        ],
+                      ),
                     );
                   },
                 );
@@ -66,9 +76,11 @@ class CommentsScreenState extends State<CommentsScreen> {
                 Expanded(
                   child: TextField(
                     controller: _commentController,
-                    decoration: const InputDecoration(
-                      hintText: 'Add a comment...',
-                      border: OutlineInputBorder(),
+                    decoration: InputDecoration(
+                      hintText: 'Add a comment...', // Placeholder for localization
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10.0), // Added border radius
+                      ),
                     ),
                   ),
                 ),

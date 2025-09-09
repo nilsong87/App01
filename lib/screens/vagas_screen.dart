@@ -54,7 +54,7 @@ class VagasScreenState extends State<VagasScreen> {
         _descriptionController.text.trim().isEmpty ||
         _selectedInstrument == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Por favor, preencha todos os campos.')),
+        const SnackBar(content: Text('Please fill in all fields.')), // Placeholder for localization
       );
       return;
     }
@@ -99,33 +99,39 @@ class VagasScreenState extends State<VagasScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    'Criar Nova Vaga/Disponibilidade',
+                  const Text(
+                    'Create New Vacancy/Availability', // Placeholder for localization
                     style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                   ),
-                  SizedBox(height: 12),
+                  const SizedBox(height: 12),
                   TextField(
                     controller: _titleController,
                     decoration: InputDecoration(
-                      labelText: 'Título',
-                      border: OutlineInputBorder(),
+                      labelText: 'Title', // Placeholder for localization
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10.0), // Added border radius
+                      ),
                     ),
                   ),
-                  SizedBox(height: 12),
+                  const SizedBox(height: 12),
                   TextField(
                     controller: _descriptionController,
                     decoration: InputDecoration(
-                      labelText: 'Descrição',
-                      border: OutlineInputBorder(),
+                      labelText: 'Description', // Placeholder for localization
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10.0), // Added border radius
+                      ),
                     ),
                     maxLines: 3,
                   ),
-                  SizedBox(height: 12),
+                  const SizedBox(height: 12),
                   DropdownButtonFormField<String>(
                     initialValue: _selectedInstrument,
                     decoration: InputDecoration(
-                      labelText: 'Instrumento/Função',
-                      border: OutlineInputBorder(),
+                      labelText: 'Instrument/Role', // Placeholder for localization
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10.0), // Added border radius
+                      ),
                     ),
                     items: _instruments.map((instrument) {
                       return DropdownMenuItem(
@@ -139,10 +145,10 @@ class VagasScreenState extends State<VagasScreen> {
                       });
                     },
                   ),
-                  SizedBox(height: 12),
+                  const SizedBox(height: 12),
                   ElevatedButton(
                     onPressed: _createVaga,
-                    child: Text('Publicar Vaga'),
+                    child: const Text('Publish Vacancy'), // Placeholder for localization
                   ),
                 ],
               ),
@@ -157,24 +163,26 @@ class VagasScreenState extends State<VagasScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    'Filtros',
+                  const Text(
+                    'Filters', // Placeholder for localization
                     style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                   ),
-                  SizedBox(height: 12),
+                  const SizedBox(height: 12),
                   Row(
                     children: [
                       Expanded(
                         child: DropdownButtonFormField<String>(
                           initialValue: _filterUserType,
                           decoration: InputDecoration(
-                            labelText: 'Tipo de Usuário',
-                            border: OutlineInputBorder(),
+                            labelText: 'User Type', // Placeholder for localization
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(10.0), // Added border radius
+                            ),
                           ),
                           items: const [
-                            DropdownMenuItem(value: null, child: Text('Todos')),
-                            DropdownMenuItem(value: 'musician', child: Text('Músico')),
-                            DropdownMenuItem(value: 'band', child: Text('Banda')),
+                            DropdownMenuItem(value: null, child: Text('All')), // Placeholder for localization
+                            DropdownMenuItem(value: 'musician', child: Text('Musician')), // Placeholder for localization
+                            DropdownMenuItem(value: 'band', child: Text('Band')), // Placeholder for localization
                           ],
                           onChanged: (value) {
                             setState(() {
@@ -183,16 +191,18 @@ class VagasScreenState extends State<VagasScreen> {
                           },
                         ),
                       ),
-                      SizedBox(width: 12),
+                      const SizedBox(width: 12),
                       Expanded(
                         child: DropdownButtonFormField<String>(
                           initialValue: _filterInstrument,
                           decoration: InputDecoration(
-                            labelText: 'Instrumento',
-                            border: OutlineInputBorder(),
+                            labelText: 'Instrument', // Placeholder for localization
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(10.0), // Added border radius
+                            ),
                           ),
                           items: [
-                            const DropdownMenuItem(value: null, child: Text('Todos')),
+                            const DropdownMenuItem(value: null, child: Text('All')), // Placeholder for localization
                             ..._instruments.map((instrument) {
                               return DropdownMenuItem(
                                 value: instrument,
@@ -209,10 +219,10 @@ class VagasScreenState extends State<VagasScreen> {
                       ),
                     ],
                   ),
-                  SizedBox(height: 12),
+                  const SizedBox(height: 12),
                   ElevatedButton(
                     onPressed: _applyFilters,
-                    child: Text('Aplicar Filtros'),
+                    child: const Text('Apply Filters'), // Placeholder for localization
                   ),
                 ],
               ),
@@ -223,8 +233,8 @@ class VagasScreenState extends State<VagasScreen> {
           child: Consumer<VagaProvider>(
             builder: (context, vagaProvider, child) {
               if (vagaProvider.vagas.isEmpty) {
-                return Center(
-                  child: Text('Nenhuma vaga/disponibilidade encontrada.'),
+                return const Center(
+                  child: Text('No vacancies/availabilities found.'), // Placeholder for localization
                 );
               }
 
@@ -233,7 +243,7 @@ class VagasScreenState extends State<VagasScreen> {
                 itemBuilder: (ctx, index) {
                   final vaga = vagaProvider.vagas[index];
                   return Card(
-                    margin: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     child: Padding(
                       padding: const EdgeInsets.all(8.0),
                       child: Column(
@@ -241,21 +251,21 @@ class VagasScreenState extends State<VagasScreen> {
                         children: [
                           Text(
                             vaga.title,
-                            style: TextStyle(
+                            style: const TextStyle(
                               fontWeight: FontWeight.bold,
                               fontSize: 16,
                             ),
                           ),
-                          SizedBox(height: 4),
-                          Text('Por: ${vaga.username} (${vaga.userType})'),
-                          SizedBox(height: 4),
-                          Text('Instrumento: ${vaga.instrument}'),
-                          SizedBox(height: 4),
+                          const SizedBox(height: 4),
+                          Text('By: ${vaga.username} (${vaga.userType})'), // Placeholder for localization
+                          const SizedBox(height: 4),
+                          Text('Instrument: ${vaga.instrument}'), // Placeholder for localization
+                          const SizedBox(height: 4),
                           Text(vaga.description),
-                          SizedBox(height: 4),
+                          const SizedBox(height: 4),
                           Text(
                             vaga.timestamp.toDate().toString(),
-                            style: TextStyle(color: Colors.grey, fontSize: 12),
+                            style: const TextStyle(color: Colors.grey, fontSize: 12),
                           ),
                         ],
                       ),

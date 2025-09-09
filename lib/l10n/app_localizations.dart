@@ -129,6 +129,114 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Chat'**
   String get chat;
+
+  /// No description provided for @authUsernameUserTypeRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Please enter username and select user type.'**
+  String get authUsernameUserTypeRequired;
+
+  /// No description provided for @authEmailForPasswordReset.
+  ///
+  /// In en, this message translates to:
+  /// **'Please enter your email to reset password.'**
+  String get authEmailForPasswordReset;
+
+  /// No description provided for @authPasswordResetLinkSent.
+  ///
+  /// In en, this message translates to:
+  /// **'Password reset link sent to your email.'**
+  String get authPasswordResetLinkSent;
+
+  /// No description provided for @authErrorSendingPasswordReset.
+  ///
+  /// In en, this message translates to:
+  /// **'An error occurred while sending the reset email.'**
+  String get authErrorSendingPasswordReset;
+
+  /// No description provided for @authLogin.
+  ///
+  /// In en, this message translates to:
+  /// **'Login'**
+  String get authLogin;
+
+  /// No description provided for @authRegister.
+  ///
+  /// In en, this message translates to:
+  /// **'Register'**
+  String get authRegister;
+
+  /// No description provided for @authEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'Email'**
+  String get authEmail;
+
+  /// No description provided for @authPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Password'**
+  String get authPassword;
+
+  /// No description provided for @authUsername.
+  ///
+  /// In en, this message translates to:
+  /// **'Username'**
+  String get authUsername;
+
+  /// No description provided for @authUserType.
+  ///
+  /// In en, this message translates to:
+  /// **'User Type'**
+  String get authUserType;
+
+  /// No description provided for @authUserTypeMusician.
+  ///
+  /// In en, this message translates to:
+  /// **'Musician'**
+  String get authUserTypeMusician;
+
+  /// No description provided for @authUserTypeBand.
+  ///
+  /// In en, this message translates to:
+  /// **'Band'**
+  String get authUserTypeBand;
+
+  /// No description provided for @authEnter.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter'**
+  String get authEnter;
+
+  /// No description provided for @authSignUp.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign Up'**
+  String get authSignUp;
+
+  /// No description provided for @authCreateNewAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Create new account'**
+  String get authCreateNewAccount;
+
+  /// No description provided for @authAlreadyHaveAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Already have an account'**
+  String get authAlreadyHaveAccount;
+
+  /// No description provided for @authForgotPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Forgot password?'**
+  String get authForgotPassword;
+
+  /// No description provided for @authUnexpectedError.
+  ///
+  /// In en, this message translates to:
+  /// **'An unexpected error occurred.'**
+  String get authUnexpectedError;
 }
 
 class _AppLocalizationsDelegate

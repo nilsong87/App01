@@ -57,9 +57,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
     if (_usernameController.text.trim().isEmpty || _userType == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
+        const SnackBar(
           content: Text(
-            'Por favor, preencha o nome de usuário e selecione o tipo de usuário.',
+            'Please fill in the username and select the user type.', // Placeholder for localization
           ),
         ),
       );
@@ -91,21 +91,21 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(SnackBar(content: Text('Perfil atualizado com sucesso!')));
+      ).showSnackBar(const SnackBar(content: Text('Profile updated successfully!'))); // Placeholder for localization
       if (!mounted) return;
       Navigator.of(context).pop();
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(SnackBar(content: Text('Erro ao atualizar perfil: $e')));
+      ).showSnackBar(SnackBar(content: Text('Error updating profile: $e'))); // Placeholder for localization
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Editar Perfil')),
+      appBar: AppBar(title: const Text('Edit Profile')), // Placeholder for localization
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: SingleChildScrollView(
@@ -114,48 +114,58 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               TextField(
                 controller: _usernameController,
                 decoration: InputDecoration(
-                  labelText: 'Nome de Usuário',
-                  border: OutlineInputBorder(),
+                  labelText: 'Username', // Placeholder for localization
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10.0), // Added border radius
+                  ),
                 ),
               ),
-              SizedBox(height: 12),
+              const SizedBox(height: 12),
               TextField(
                 controller: _bioController,
                 decoration: InputDecoration(
-                  labelText: 'Bio',
-                  border: OutlineInputBorder(),
+                  labelText: 'Bio', // Placeholder for localization
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10.0), // Added border radius
+                  ),
                 ),
                 maxLines: 3,
               ),
-              SizedBox(height: 12),
+              const SizedBox(height: 12),
               TextField(
                 controller: _profileImageUrlController,
                 decoration: InputDecoration(
-                  labelText: 'URL da Imagem de Perfil',
-                  border: OutlineInputBorder(),
+                  labelText: 'Profile Image URL', // Placeholder for localization
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10.0), // Added border radius
+                  ),
                 ),
               ),
-              SizedBox(height: 12),
+              const SizedBox(height: 12),
               TextField(
                 controller: _nicknameController,
                 decoration: InputDecoration(
-                  labelText: 'Apelido (@)',
-                  border: OutlineInputBorder(),
+                  labelText: 'Nickname (@)', // Placeholder for localization
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10.0), // Added border radius
+                  ),
                 ),
               ),
-              SizedBox(height: 12),
+              const SizedBox(height: 12),
               TextField(
                 controller: _instrumentsController,
                 decoration: InputDecoration(
-                  labelText: 'Instrumentos (separados por vírgula)',
-                  hintText: 'Ex: vocal, guitarra, bateria',
-                  border: OutlineInputBorder(),
+                  labelText: 'Instruments (comma-separated)', // Placeholder for localization
+                  hintText: 'Ex: vocal, guitar, drums', // Placeholder for localization
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10.0), // Added border radius
+                  ),
                 ),
               ),
-              SizedBox(height: 12),
+              const SizedBox(height: 12),
               Row(
                 children: [
-                  Text('Disponível para banda/vagas:'),
+                  const Text('Available for band/vacancies:'), // Placeholder for localization
                   Switch(
                     value: _isAvailable,
                     onChanged: (value) {
@@ -166,16 +176,18 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   ),
                 ],
               ),
-              SizedBox(height: 12),
+              const SizedBox(height: 12),
               DropdownButtonFormField<String>(
                 initialValue: _userType,
                 decoration: InputDecoration(
-                  labelText: 'Tipo de Usuário',
-                  border: OutlineInputBorder(),
+                  labelText: 'User Type', // Placeholder for localization
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10.0), // Added border radius
+                  ),
                 ),
                 items: const [
-                  DropdownMenuItem(value: 'musician', child: Text('Músico')),
-                  DropdownMenuItem(value: 'band', child: Text('Banda')),
+                  DropdownMenuItem(value: 'musician', child: Text('Musician')), // Placeholder for localization
+                  DropdownMenuItem(value: 'band', child: Text('Band')), // Placeholder for localization
                 ],
                 onChanged: (value) {
                   setState(() {
@@ -183,10 +195,10 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   });
                 },
               ),
-              SizedBox(height: 20),
+              const SizedBox(height: 20),
               ElevatedButton(
                 onPressed: _updateProfile,
-                child: Text('Salvar Alterações'),
+                child: const Text('Save Changes'), // Placeholder for localization
               ),
             ],
           ),

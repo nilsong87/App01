@@ -60,59 +60,59 @@ class ArtistaScreenState extends State<ArtistaScreen> {
                       CircleAvatar(
                         radius: 60,
                         backgroundColor: Theme.of(context).colorScheme.primary,
-                        backgroundImage: userProfile.profileImageUrl != null && userProfile.profileImageUrl!.isNotEmpty
+                        backgroundImage: (userProfile.profileImageUrl != null && userProfile.profileImageUrl!.isNotEmpty)
                             ? NetworkImage(userProfile.profileImageUrl!)
                             : null,
-                        child: userProfile.profileImageUrl == null || userProfile.profileImageUrl!.isEmpty
-                            ? Icon(Icons.person, size: 60, color: Colors.white)
+                        child: (userProfile.profileImageUrl == null || userProfile.profileImageUrl!.isEmpty)
+                            ? const Icon(Icons.person, size: 60, color: Colors.white)
                             : null,
                       ),
-                      SizedBox(height: 10),
+                      const SizedBox(height: 10),
                                             Text(
                         userProfile.username,
-                        style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                        style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
                       ),
                       if (userProfile.nickname != null && userProfile.nickname!.isNotEmpty)
                         Text(
                           '@${userProfile.nickname}',
-                          style: TextStyle(fontSize: 18, color: Colors.grey),
+                          style: const TextStyle(fontSize: 18, color: Colors.grey),
                         )
                       else
                         Text(
                           '@${userProfile.username.toLowerCase().replaceAll(' ', '')}',
-                          style: TextStyle(fontSize: 16, color: Colors.grey),
+                          style: const TextStyle(fontSize: 16, color: Colors.grey),
                         ),
-                      SizedBox(height: 10),
+                      const SizedBox(height: 10),
                       if (userProfile.bio != null && userProfile.bio!.isNotEmpty)
                         Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 16.0),
                           child: Text(
                             userProfile.bio!,
                             textAlign: TextAlign.center,
-                            style: TextStyle(fontSize: 14),
+                            style: const TextStyle(fontSize: 14),
                           ),
                         ),
-                      SizedBox(height: 10),
+                      const SizedBox(height: 10),
                       Text(
                         'Tipo: ${userProfile.userType == 'musician' ? 'Músico' : 'Banda'}',
-                        style: TextStyle(fontSize: 16),
+                        style: const TextStyle(fontSize: 16),
                       ),
                       if (userProfile.isAvailable != null)
                         Text(
                           userProfile.userType == 'musician'
                               ? (userProfile.isAvailable! ? 'Disponível para banda' : 'Não disponível para banda')
                               : (userProfile.isAvailable! ? 'Com vagas abertas' : 'Sem vagas abertas'),
-                          style: TextStyle(fontSize: 14, color: Colors.blueGrey),
+                          style: const TextStyle(fontSize: 14, color: Colors.blueGrey),
                         ),
                       if (userProfile.instruments != null && userProfile.instruments!.isNotEmpty)
                         Padding(
                           padding: const EdgeInsets.only(top: 5.0),
                           child: Text(
                             'Instrumentos: ${userProfile.instruments!.join(', ')}',
-                            style: TextStyle(fontSize: 14, fontStyle: FontStyle.italic),
+                            style: const TextStyle(fontSize: 14, fontStyle: FontStyle.italic),
                           ),
                         ),
-                      SizedBox(height: 20),
+                      const SizedBox(height: 20),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceAround,
                         children: [
@@ -120,27 +120,27 @@ class ArtistaScreenState extends State<ArtistaScreen> {
                             children: [
                               Text(
                                 (userProfile.friendUids?.length ?? 0).toString(),
-                                style: TextStyle(fontWeight: FontWeight.bold),
+                                style: const TextStyle(fontWeight: FontWeight.bold),
                               ),
-                              Text('Amigos'),
+                              const Text('Amigos'),
                             ],
                           ),
                           Column(
-                            children: [
+                            children: [ 
                               Text(
                                 (userProfile.postCount ?? 0).toString(),
-                                style: TextStyle(fontWeight: FontWeight.bold),
+                                style: const TextStyle(fontWeight: FontWeight.bold),
                               ),
-                              Text('Postagens'),
+                              const Text('Postagens'),
                             ],
                           ),
                           Column(
                             children: [
                               Text(
                                 (userProfile.profileViewCount ?? 0).toString(),
-                                style: TextStyle(fontWeight: FontWeight.bold),
+                                style: const TextStyle(fontWeight: FontWeight.bold),
                               ),
-                              Text('Visualizações'),
+                              const Text('Visualizações'),
                             ],
                           ),
                         ],
@@ -148,13 +148,13 @@ class ArtistaScreenState extends State<ArtistaScreen> {
                     ],
                   ),
                 ),
-                Divider(),
+                const Divider(),
                 // Placeholder for content tabs (Video, Photo, Music)
                 DefaultTabController(
                   length: 3,
                   child: Column(
                     children: [
-                      TabBar(
+                      const TabBar(
                         tabs: [
                           Tab(icon: Icon(Icons.videocam), text: 'Vídeos'),
                           Tab(icon: Icon(Icons.photo), text: 'Fotos'),
@@ -165,17 +165,17 @@ class ArtistaScreenState extends State<ArtistaScreen> {
                         height: 300, // Adjust height as needed
                         child: TabBarView(
                           children: [
-                            Center(child: Text('Conteúdo de Vídeos aqui')),
-                            Center(child: Text('Conteúdo de Fotos aqui')),
-                            Center(child: Text('Conteúdo de Músicas aqui')),
+                            const Center(child: Text('Conteúdo de Vídeos aqui')),
+                            const Center(child: Text('Conteúdo de Fotos aqui')),
+                            const Center(child: Text('Conteúdo de Músicas aqui')),
                           ],
                         ),
                       ),
                     ],
                   ),
                 ),
-                Divider(),
-                Text(
+                const Divider(),
+                const Text(
                   'Minhas Postagens',
                   style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                 ),
@@ -187,22 +187,22 @@ class ArtistaScreenState extends State<ArtistaScreen> {
                       .snapshots(),
                   builder: (ctx, postSnapshot) {
                     if (postSnapshot.connectionState == ConnectionState.waiting) {
-                      return Center(child: CircularProgressIndicator());
+                      return const Center(child: CircularProgressIndicator());
                     }
                     if (!postSnapshot.hasData || postSnapshot.data!.docs.isEmpty) {
-                      return Center(child: Text('Nenhuma postagem sua ainda.'));
+                      return const Center(child: Text('Nenhuma postagem sua ainda.'));
                     }
 
                     final posts = postSnapshot.data!.docs;
 
                     return ListView.builder(
                       shrinkWrap: true,
-                      physics: NeverScrollableScrollPhysics(),
+                      physics: const NeverScrollableScrollPhysics(),
                       itemCount: posts.length,
                       itemBuilder: (ctx, index) {
                         final post = posts[index];
                         return Card(
-                          margin: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                           child: Padding(
                             padding: const EdgeInsets.all(8.0),
                             child: Column(
@@ -210,14 +210,14 @@ class ArtistaScreenState extends State<ArtistaScreen> {
                               children: [
                                 Text(
                                   post['username'] ?? 'Usuário Desconhecido',
-                                  style: TextStyle(fontWeight: FontWeight.bold),
+                                  style: const TextStyle(fontWeight: FontWeight.bold),
                                 ),
-                                SizedBox(height: 4),
+                                const SizedBox(height: 4),
                                 Text(post['content']),
-                                SizedBox(height: 4),
+                                const SizedBox(height: 4),
                                 Text(
                                   (post['timestamp'] as Timestamp).toDate().toString(),
-                                  style: TextStyle(color: Colors.grey, fontSize: 12),
+                                  style: const TextStyle(color: Colors.grey, fontSize: 12),
                                 ),
                               ],
                             ),

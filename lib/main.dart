@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:musiconnect/routes.dart';
+import 'dart:developer';
 import 'package:musiconnect/main_screen.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:musiconnect/screens/auth_screen.dart';
 import 'package:provider/provider.dart'; // Import provider
 import 'package:musiconnect/providers/user_profile_provider.dart'; // Import UserProfileProvider
 import 'package:musiconnect/providers/post_provider.dart'; // Import PostProvider
 import 'package:musiconnect/providers/vaga_provider.dart'; // Import VagaProvider
+import 'package:musiconnect/screens/create_post_screen.dart';
 // Import UsersListScreen
 import 'package:musiconnect/screens/comments_screen.dart'; // Import CommentsScreen
 import 'package:musiconnect/screens/group_detail_screen.dart'; // Import GroupDetailScreen
@@ -15,10 +16,23 @@ import 'package:musiconnect/models/group.dart'; // Import Group model
 import 'package:musiconnect/utils/app_colors.dart'; // Import custom app colors
 import 'package:musiconnect/l10n/app_localizations.dart'; // Import generated localizations
 import 'package:flutter_localizations/flutter_localizations.dart'; // Import flutter_localizations
+import 'package:firebase_messaging/firebase_messaging.dart'; // Import FirebaseMessaging
+import 'package:musiconnect/services/notification_service.dart'; // Import NotificationService
+
+@pragma('vm:entry-point')
+Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
+  await Firebase.initializeApp();
+  log('Handling a background message: ${message.messageId}');
+}
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
+  FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler); // Register background handler
+
+  // Initialize NotificationService
+  await NotificationService().initialize(); // Add this line
+
   runApp(
     MultiProvider(
       providers: [
@@ -41,7 +55,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: AppLocalizations.of(context)!.appTitle, // Use localized title
+      title: 'Musiconnect', // Use a static title for the app
       localizationsDelegates: [
         AppLocalizations.delegate,
         GlobalMaterialLocalizations.delegate,
@@ -103,6 +117,7 @@ class MyApp extends StatelessWidget {
       routes: {
         AppRoutes.auth: (context) => const AuthScreen(),
         AppRoutes.main: (context) => const MainScreen(),
+        AppRoutes.createPost: (context) => const CreatePostScreen(),
         AppRoutes.comments: (context) {
           final postId = ModalRoute.of(context)?.settings.arguments as String?;
           if (postId == null) {
@@ -120,37 +135,7 @@ class MyApp extends StatelessWidget {
           return GroupDetailScreen(group: group);
         },
       },
-      home: StreamBuilder(
-        stream: FirebaseAuth.instance.authStateChanges(),
-        builder: (ctx, userSnapshot) {
-          if (userSnapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          }
-          if (userSnapshot.hasData) {
-            // Fetch user profile when user is logged in
-            Provider.of<UserProfileProvider>(
-              context,
-              listen: false,
-            ).fetchUserProfile(userSnapshot.data!.uid);
-            // Navigate after the current frame is built
-            Future.microtask(() {
-              if (!context.mounted) return; // Add this line
-              Navigator.of(context).pushReplacementNamed(AppRoutes.main);
-            });
-            return const SizedBox.shrink(); // Return an empty widget while navigating
-          }
-          if (userSnapshot.hasError) {
-            return Center(
-              child: Text('An error occurred: ${userSnapshot.error}'),
-            );
-          }
-          Future.microtask(() {
-            if (!context.mounted) return; // Add this line
-            Navigator.of(context).pushReplacementNamed(AppRoutes.auth);
-          });
-          return const SizedBox.shrink(); // Return an empty widget while navigating
-        },
-      ),
+      home: const AuthScreen(), // Set AuthScreen as the initial screen for testing purposes
     );
   }
 }

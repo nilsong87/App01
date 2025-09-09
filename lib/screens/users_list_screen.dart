@@ -37,52 +37,73 @@ class _UsersListScreenState extends State<UsersListScreen> {
     final currentUser = _auth.currentUser;
     if (currentUser == null) return;
 
-    // Check if a request already exists
-    final existingRequest = await _firestore
-        .collection('chat_requests')
-        .where('senderId', isEqualTo: currentUser.uid)
-        .where('receiverId', isEqualTo: receiverId)
-        .get();
+    try {
+      // Check if a request already exists
+      final existingRequest = await _firestore
+          .collection('chat_requests')
+          .where('senderId', isEqualTo: currentUser.uid)
+          .where('receiverId', isEqualTo: receiverId)
+          .get();
 
-    if (existingRequest.docs.isNotEmpty) {
+      if (existingRequest.docs.isNotEmpty) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Chat request already sent.')), // Placeholder for localization
+        );
+        return;
+      }
+
+      await _firestore.collection('chat_requests').add({
+        'senderId': currentUser.uid,
+        'receiverId': receiverId,
+        'status': 'pending',
+        'timestamp': Timestamp.now(),
+      });
+
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Chat request sent!'))); // Placeholder for localization
+    } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Solicitação de chat já enviada.')),
+        SnackBar(content: Text('Error sending chat request: $e')), // Placeholder for localization
       );
-      return;
     }
-
-    await _firestore.collection('chat_requests').add({
-      'senderId': currentUser.uid,
-      'receiverId': receiverId,
-      'status': 'pending',
-      'timestamp': Timestamp.now(),
-    });
-
-    if (!mounted) return;
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text('Solicitação de chat enviada!')));
   }
 
   Future<void> _acceptChatRequest(String requestId) async {
-    await _firestore.collection('chat_requests').doc(requestId).update({
-      'status': 'accepted',
-    });
-    if (!mounted) return;
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text('Solicitação de chat aceita!')));
+    try {
+      await _firestore.collection('chat_requests').doc(requestId).update({
+        'status': 'accepted',
+      });
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Chat request accepted!'))); // Placeholder for localization
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error accepting chat request: $e')), // Placeholder for localization
+      );
+    }
   }
 
   Future<void> _rejectChatRequest(String requestId) async {
-    await _firestore.collection('chat_requests').doc(requestId).update({
-      'status': 'rejected',
-    });
-    if (!mounted) return;
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text('Solicitação de chat recusada.')));
+    try {
+      await _firestore.collection('chat_requests').doc(requestId).update({
+        'status': 'rejected',
+      });
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Chat request rejected.'))); // Placeholder for localization
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error rejecting chat request: $e')), // Placeholder for localization
+      );
+    }
   }
 
   @override
@@ -90,15 +111,15 @@ class _UsersListScreenState extends State<UsersListScreen> {
     final currentUser = _auth.currentUser;
 
     if (currentUser == null) {
-      return Center(child: Text('Faça login para ver a lista de usuários.'));
+      return const Center(child: Text('Please log in to see the user list.')); // Placeholder for localization
     }
 
     return Scaffold(
       appBar: AppBar(
         title: TextField(
           controller: _searchController,
-          decoration: InputDecoration(
-            hintText: 'Buscar usuários...',
+          decoration: const InputDecoration(
+            hintText: 'Search users...', // Placeholder for localization
             border: InputBorder.none,
             hintStyle: TextStyle(color: Colors.white70),
           ),
@@ -116,10 +137,10 @@ class _UsersListScreenState extends State<UsersListScreen> {
                   .snapshots(),
         builder: (ctx, userSnapshot) {
           if (userSnapshot.connectionState == ConnectionState.waiting) {
-            return Center(child: CircularProgressIndicator());
+            return const Center(child: CircularProgressIndicator());
           }
           if (!userSnapshot.hasData || userSnapshot.data!.docs.isEmpty) {
-            return Center(child: Text('Nenhum usuário encontrado.'));
+            return const Center(child: Text('No users found.')); // Placeholder for localization
           }
 
           final users = userSnapshot.data!.docs;
@@ -132,7 +153,7 @@ class _UsersListScreenState extends State<UsersListScreen> {
             builder: (ctx, sentRequestsSnapshot) {
               if (sentRequestsSnapshot.connectionState ==
                   ConnectionState.waiting) {
-                return Center(child: CircularProgressIndicator());
+                return const Center(child: CircularProgressIndicator());
               }
               final sentRequests = sentRequestsSnapshot.data!.docs
                   .map(
@@ -152,7 +173,7 @@ class _UsersListScreenState extends State<UsersListScreen> {
                 builder: (ctx, receivedRequestsSnapshot) {
                   if (receivedRequestsSnapshot.connectionState ==
                       ConnectionState.waiting) {
-                    return Center(child: CircularProgressIndicator());
+                    return const Center(child: CircularProgressIndicator());
                   }
                   final receivedRequests = receivedRequestsSnapshot.data!.docs
                       .map(
@@ -206,24 +227,24 @@ class _UsersListScreenState extends State<UsersListScreen> {
 
                       if (requestStatus == 'pending') {
                         if (isSender) {
-                          trailingWidget = Text('Solicitação Enviada');
+                          trailingWidget = const Text('Request Sent'); // Placeholder for localization
                         } else {
                           trailingWidget = Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               IconButton(
-                                icon: Icon(Icons.check, color: Colors.green),
+                                icon: const Icon(Icons.check, color: Colors.green),
                                 onPressed: () => _acceptChatRequest(requestId!),
                               ),
                               IconButton(
-                                icon: Icon(Icons.close, color: Colors.red),
+                                icon: const Icon(Icons.close, color: Colors.red),
                                 onPressed: () => _rejectChatRequest(requestId!),
                               ),
                             ],
                           );
                         }
                       } else if (requestStatus == 'accepted') {
-                        trailingWidget = Icon(Icons.chat);
+                        trailingWidget = const Icon(Icons.chat);
                         onTapAction = () {
                           Navigator.of(context).push(
                             MaterialPageRoute(
@@ -235,17 +256,17 @@ class _UsersListScreenState extends State<UsersListScreen> {
                           );
                         };
                       } else if (requestStatus == 'rejected') {
-                        trailingWidget = Text('Solicitação Recusada');
+                        trailingWidget = const Text('Request Rejected'); // Placeholder for localization
                       } else {
                         // No request or rejected, allow sending new request
                         trailingWidget = ElevatedButton(
                           onPressed: () => _sendChatRequest(userProfile.uid),
-                          child: Text('Enviar Solicitação'),
+                          child: const Text('Send Request'), // Placeholder for localization
                         );
                       }
 
                       return Card(
-                        margin: EdgeInsets.symmetric(
+                        margin: const EdgeInsets.symmetric(
                           horizontal: 8,
                           vertical: 4,
                         ),
@@ -256,8 +277,8 @@ class _UsersListScreenState extends State<UsersListScreen> {
                           title: Text(userProfile.username),
                           subtitle: Text(
                             userProfile.userType == 'musician'
-                                ? 'Músico'
-                                : 'Banda',
+                                ? 'Musician' // Placeholder for localization
+                                : 'Band', // Placeholder for localization
                           ),
                           trailing: trailingWidget,
                           onTap: onTapAction,

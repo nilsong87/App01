@@ -7,6 +7,7 @@ import 'package:musiconnect/screens/trupe_screen.dart';
 import 'package:musiconnect/screens/artista_screen.dart';
 import 'package:musiconnect/screens/users_list_screen.dart';
 import 'package:musiconnect/l10n/app_localizations.dart'; // Import generated localizations
+import 'package:musiconnect/routes.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -48,6 +49,12 @@ class _MainScreenState extends State<MainScreen> {
     return Scaffold(
       appBar: AppBar(title: Text(localizations.appTitle)), // Use localized app title
       body: _widgetOptions.elementAt(_selectedIndex),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          Navigator.of(context).pushNamed(AppRoutes.createPost);
+        },
+        child: const Icon(Icons.add),
+      ),
       bottomNavigationBar: BottomNavigationBar(
         items: <BottomNavigationBarItem>[
           BottomNavigationBarItem(icon: const Icon(Icons.home), label: localizations.home),

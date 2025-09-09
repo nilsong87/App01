@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-
 import 'package:provider/provider.dart';
-
 import 'package:musiconnect/models/user_profile.dart';
 import 'package:musiconnect/providers/user_profile_provider.dart';
 
@@ -15,42 +13,54 @@ class AuthScreen extends StatefulWidget {
 
 class _AuthScreenState extends State<AuthScreen> {
   final _auth = FirebaseAuth.instance;
+  final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _usernameController = TextEditingController();
   bool _isLogin = true;
-  String? _errorMessage;
+  bool _isLoading = false;
   String? _userType;
 
+  void _showErrorSnackBar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: Theme.of(context).colorScheme.error,
+      ),
+    );
+  }
+
   void _submitAuthForm() async {
+    final isValid = _formKey.currentState?.validate() ?? false;
+    if (!isValid) {
+      return;
+    }
+
+    if (!_isLogin && _userType == null) {
+      _showErrorSnackBar('Please select a user type.');
+      return;
+    }
+
     setState(() {
-      _errorMessage = null;
+      _isLoading = true;
     });
+
     try {
       if (_isLogin) {
         await _auth.signInWithEmailAndPassword(
-          email: _emailController.text,
-          password: _passwordController.text,
+          email: _emailController.text.trim(),
+          password: _passwordController.text.trim(),
         );
       } else {
-        if (_usernameController.text.trim().isEmpty || _userType == null) {
-          setState(() {
-            _errorMessage =
-                'Por favor, preencha o nome de usuário e selecione o tipo de usuário.';
-          });
-          return;
-        }
-
-        UserCredential userCredential = await _auth
-            .createUserWithEmailAndPassword(
-              email: _emailController.text,
-              password: _passwordController.text,
-            );
+        UserCredential userCredential = await _auth.createUserWithEmailAndPassword(
+          email: _emailController.text.trim(),
+          password: _passwordController.text.trim(),
+        );
 
         if (userCredential.user != null) {
           UserProfile newUser = UserProfile(
             uid: userCredential.user!.uid,
-            email: _emailController.text,
+            email: _emailController.text.trim(),
             username: _usernameController.text.trim(),
             userType: _userType!,
           );
@@ -60,234 +70,144 @@ class _AuthScreenState extends State<AuthScreen> {
         }
       }
     } on FirebaseAuthException catch (e) {
-      setState(() {
-        _errorMessage = e.message;
-      });
+      _showErrorSnackBar(e.message ?? 'An error occurred.');
     } catch (e) {
-      setState(() {
-        _errorMessage = 'An unexpected error occurred.';
-      });
+      _showErrorSnackBar('An unexpected error occurred.');
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
     }
   }
 
   void _resetPassword() async {
     if (_emailController.text.trim().isEmpty) {
-      setState(() {
-        _errorMessage = 'Por favor, insira seu email para redefinir a senha.';
-      });
+      _showErrorSnackBar('Please enter your email to reset your password.');
       return;
     }
     try {
       await _auth.sendPasswordResetEmail(email: _emailController.text.trim());
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            'Link de redefinição de senha enviado para o seu email.',
-          ),
+        const SnackBar(
+          content: Text('Password reset link sent to your email.'),
         ),
       );
-      setState(() {
-        _errorMessage = null;
-      });
     } on FirebaseAuthException catch (e) {
-      setState(() {
-        _errorMessage = e.message;
-      });
+      _showErrorSnackBar(e.message ?? 'An error occurred.');
     } catch (e) {
-      setState(() {
-        _errorMessage = 'Ocorreu um erro ao enviar o email de redefinição.';
-      });
+      _showErrorSnackBar('An error occurred while sending the reset email.');
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Theme.of(
-        context,
-      ).colorScheme.surface,
-      appBar: AppBar(
-        title: Text(_isLogin ? 'Login' : 'Cadastro'),
-        backgroundColor: Theme.of(
-          context,
-        ).appBarTheme.backgroundColor,
-        foregroundColor: Theme.of(context)
-            .appBarTheme
-            .foregroundColor,
-      ),
-      body: Center(
-        child: Card(
-          margin: const EdgeInsets.all(20),
-          color: Theme.of(context).cardColor,
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [
+              Theme.of(context).colorScheme.primary,
+              Theme.of(context).colorScheme.secondary,
+            ],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+        ),
+        child: Center(
           child: SingleChildScrollView(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  'MusiConnect',
-                  style: TextStyle(
-                    fontSize: 32,
-                    fontWeight: FontWeight.bold,
-                    color: Theme.of(context).colorScheme.primary,
-                  ),
-                ),
-                const SizedBox(height: 20),
-                TextField(
-                  controller: _emailController,
-                  keyboardType: TextInputType.emailAddress,
-                  decoration: InputDecoration(
-                    labelText: 'Email',
-                    labelStyle: TextStyle(
-                      color: Theme.of(context).colorScheme.onSurface,
-                    ),
-                    enabledBorder: OutlineInputBorder(
-                      borderSide: BorderSide(
-                        color: Theme.of(context).colorScheme.primary,
-                      ),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderSide: BorderSide(
-                        color: Theme.of(context).colorScheme.secondary,
-                      ),
-                    ),
-                  ),
-                  style: TextStyle(
-                    color: Theme.of(context).colorScheme.onSurface,
-                  ),
-                ),
-                const SizedBox(height: 12),
-                TextField(
-                  controller: _passwordController,
-                  obscureText: true,
-                  decoration: InputDecoration(
-                    labelText: 'Senha',
-                    labelStyle: TextStyle(
-                      color: Theme.of(context).colorScheme.onSurface,
-                    ),
-                    enabledBorder: OutlineInputBorder(
-                      borderSide: BorderSide(
-                        color: Theme.of(context).colorScheme.primary,
-                      ),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderSide: BorderSide(
-                        color: Theme.of(context).colorScheme.secondary,
-                      ),
-                    ),
-                  ),
-                  style: TextStyle(
-                    color: Theme.of(context).colorScheme.onSurface,
-                  ),
-                ),
-                if (!_isLogin) ...[
-                  const SizedBox(height: 12),
-                  TextField(
-                    controller: _usernameController,
-                    decoration: InputDecoration(
-                      labelText: 'Nome de Usuário',
-                      labelStyle: TextStyle(
-                        color: Theme.of(context).colorScheme.onSurface,
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderSide: BorderSide(
-                          color: Theme.of(context).colorScheme.primary,
-                        ),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderSide: BorderSide(
-                          color: Theme.of(context).colorScheme.secondary,
-                        ),
-                      ),
-                    ),
+            padding: const EdgeInsets.all(24.0),
+            child: Form(
+              key: _formKey,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(Icons.music_note, size: 80, color: Colors.white),
+                  const SizedBox(height: 16),
+                  Text(
+                    'MusiConnect',
                     style: TextStyle(
-                      color: Theme.of(context).colorScheme.onSurface,
+                      fontSize: 32,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
                     ),
                   ),
-                  const SizedBox(height: 12),
-                  DropdownButtonFormField<String>(
-                    initialValue: _userType,
-                    decoration: InputDecoration(
-                      labelText: 'Tipo de Usuário',
-                      labelStyle: TextStyle(
-                        color: Theme.of(context).colorScheme.onSurface,
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderSide: BorderSide(
-                          color: Theme.of(context).colorScheme.primary,
-                        ),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderSide: BorderSide(
-                          color: Theme.of(context).colorScheme.secondary,
-                        ),
-                      ),
+                  const SizedBox(height: 32),
+                  TextFormField(
+                    controller: _emailController,
+                    keyboardType: TextInputType.emailAddress,
+                    decoration: const InputDecoration(labelText: 'Email'),
+                    validator: (value) {
+                      if (value == null || !value.contains('@')) {
+                        return 'Please enter a valid email.';
+                      }
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: 16),
+                  TextFormField(
+                    controller: _passwordController,
+                    obscureText: true,
+                    decoration: const InputDecoration(labelText: 'Password'),
+                    validator: (value) {
+                      if (value == null || value.length < 6) {
+                        return 'Password must be at least 6 characters long.';
+                      }
+                      return null;
+                    },
+                  ),
+                  if (!_isLogin) ...[
+                    const SizedBox(height: 16),
+                    TextFormField(
+                      controller: _usernameController,
+                      decoration: const InputDecoration(labelText: 'Username'),
+                      validator: (value) {
+                        if (value == null || value.trim().isEmpty) {
+                          return 'Please enter a username.';
+                        }
+                        return null;
+                      },
                     ),
-                    items: const [
-                      DropdownMenuItem(
-                        value: 'musician',
-                        child: Text('Músico'),
-                      ),
-                      DropdownMenuItem(value: 'band', child: Text('Banda')),
-                    ],
-                    onChanged: (value) {
+                    const SizedBox(height: 16),
+                    DropdownButtonFormField<String>(
+                      initialValue: _userType,
+                      decoration: const InputDecoration(labelText: 'User Type'),
+                      items: const [
+                        DropdownMenuItem(value: 'musician', child: Text('Musician')),
+                        DropdownMenuItem(value: 'band', child: Text('Band')),
+                      ],
+                      onChanged: (value) {
+                        setState(() {
+                          _userType = value;
+                        });
+                      },
+                    ),
+                  ],
+                  const SizedBox(height: 24),
+                  if (_isLoading)
+                    const CircularProgressIndicator()
+                  else
+                    ElevatedButton(
+                      onPressed: _submitAuthForm,
+                      child: Text(_isLogin ? 'Login' : 'Sign Up'),
+                    ),
+                  TextButton(
+                    onPressed: () {
                       setState(() {
-                        _userType = value;
+                        _isLogin = !_isLogin;
                       });
                     },
-                    dropdownColor: Theme.of(context).colorScheme.surface,
-                    style: TextStyle(
-                      color: Theme.of(context).colorScheme.onSurface,
-                    ),
+                    child: Text(_isLogin ? 'Create new account' : 'I already have an account'),
                   ),
+                  if (_isLogin)
+                    TextButton(
+                      onPressed: _resetPassword,
+                      child: const Text('Forgot password?'),
+                    ),
                 ],
-                const SizedBox(height: 12),
-                if (_errorMessage != null)
-                  Text(
-                    _errorMessage!,
-                    style: TextStyle(
-                      color: Theme.of(context).colorScheme.error,
-                    ),
-                  ),
-                const SizedBox(height: 12),
-                ElevatedButton(
-                  onPressed: _submitAuthForm,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Theme.of(context).colorScheme.primary,
-                    foregroundColor: Theme.of(context).colorScheme.onPrimary,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 30,
-                      vertical: 15,
-                    ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                  ),
-                  child: Text(_isLogin ? 'Entrar' : 'Cadastrar'),
-                ),
-                TextButton(
-                  onPressed: () {
-                    setState(() {
-                      _isLogin = !_isLogin;
-                    });
-                  },
-                  style: TextButton.styleFrom(
-                    foregroundColor: Theme.of(context).colorScheme.secondary,
-                  ),
-                  child: Text(
-                    _isLogin ? 'Criar nova conta' : 'Já tenho uma conta',
-                  ),
-                ),
-                if (_isLogin)
-                  TextButton(
-                    onPressed: _resetPassword,
-                    style: TextButton.styleFrom(
-                      foregroundColor: Theme.of(context).colorScheme.secondary,
-                    ),
-                    child: const Text('Esqueceu a senha?'),
-                  ),
-              ],
+              ),
             ),
           ),
         ),

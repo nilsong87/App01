@@ -31,23 +31,34 @@ class _GroupDetailScreenState extends State<GroupDetailScreen> {
         userProfile == null ||
         _postController.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Por favor, escreva algo para postar no grupo.'),
+        const SnackBar(
+          content: Text('Please write something to post in the group.'), // Placeholder for localization
         ),
       );
       return;
     }
 
-    await _firestore.collection('posts').add({
-      'content': _postController.text.trim(),
-      'timestamp': Timestamp.now(),
-      'userId': user.uid,
-      'username': userProfile.username,
-      'userType': userProfile.userType,
-      'groupId': widget.group.id, // Associate post with this group
-    });
+    try {
+      await _firestore.collection('posts').add({
+        'content': _postController.text.trim(),
+        'timestamp': Timestamp.now(),
+        'userId': user.uid,
+        'username': userProfile.username,
+        'userType': userProfile.userType,
+        'groupId': widget.group.id, // Associate post with this group
+      });
 
-    _postController.clear();
+      _postController.clear();
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Post created successfully!')), // Placeholder for localization
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error creating post: $e')), // Placeholder for localization
+      );
+    }
   }
 
   @override
@@ -63,28 +74,30 @@ class _GroupDetailScreenState extends State<GroupDetailScreen> {
               children: [
                 Text(
                   widget.group.description,
-                  style: TextStyle(fontSize: 16, fontStyle: FontStyle.italic),
+                  style: const TextStyle(fontSize: 16, fontStyle: FontStyle.italic),
                 ),
-                SizedBox(height: 8),
-                Text('Membros: ${widget.group.members.length}'),
-                SizedBox(height: 16),
+                const SizedBox(height: 8),
+                Text('Members: ${widget.group.members.length}'), // Placeholder for localization
+                const SizedBox(height: 16),
                 TextField(
                   controller: _postController,
                   decoration: InputDecoration(
-                    hintText: 'Escreva algo para o grupo...',
-                    border: OutlineInputBorder(),
+                    hintText: 'Write something for the group...', // Placeholder for localization
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10.0), // Added border radius
+                    ),
                   ),
                   maxLines: 3,
                 ),
-                SizedBox(height: 8),
+                const SizedBox(height: 8),
                 ElevatedButton(
                   onPressed: _createGroupPost,
-                  child: Text('Postar no Grupo'),
+                  child: const Text('Post to Group'), // Placeholder for localization
                 ),
               ],
             ),
           ),
-          Divider(),
+          const Divider(),
           Expanded(
             child: StreamBuilder<QuerySnapshot>(
               stream: _firestore
@@ -97,11 +110,11 @@ class _GroupDetailScreenState extends State<GroupDetailScreen> {
                   .snapshots(),
               builder: (ctx, postSnapshot) {
                 if (postSnapshot.connectionState == ConnectionState.waiting) {
-                  return Center(child: CircularProgressIndicator());
+                  return const Center(child: CircularProgressIndicator());
                 }
                 if (!postSnapshot.hasData || postSnapshot.data!.docs.isEmpty) {
-                  return Center(
-                    child: Text('Nenhuma postagem neste grupo ainda.'),
+                  return const Center(
+                    child: Text('No posts in this group yet.'), // Placeholder for localization
                   );
                 }
 
@@ -112,24 +125,24 @@ class _GroupDetailScreenState extends State<GroupDetailScreen> {
                   itemBuilder: (ctx, index) {
                     final post = posts[index];
                     return Card(
-                      margin: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                       child: Padding(
                         padding: const EdgeInsets.all(8.0),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              post['username'] ?? 'Usuário Desconhecido',
-                              style: TextStyle(fontWeight: FontWeight.bold),
+                              post['username'] ?? 'Unknown User', // Placeholder for localization
+                              style: const TextStyle(fontWeight: FontWeight.bold),
                             ),
-                            SizedBox(height: 4),
+                            const SizedBox(height: 4),
                             Text(post['content']),
-                            SizedBox(height: 4),
+                            const SizedBox(height: 4),
                             Text(
                               (post['timestamp'] as Timestamp)
                                   .toDate()
                                   .toString(),
-                              style: TextStyle(
+                              style: const TextStyle(
                                 color: Colors.grey,
                                 fontSize: 12,
                               ),
